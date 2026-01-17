@@ -376,6 +376,83 @@
             margin-bottom: 10px;
         }
 
+        .mode-selection {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .mode-card {
+            padding: 30px;
+            background: rgba(255, 107, 157, 0.1);
+            border: 3px solid var(--primary);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mode-card:hover {
+            background: rgba(255, 107, 157, 0.2);
+            transform: translateY(-8px);
+            box-shadow: 0 8px 30px rgba(255, 107, 157, 0.5);
+            border-color: var(--secondary);
+        }
+
+        .mode-card.selected {
+            background: linear-gradient(135deg, rgba(255, 107, 157, 0.3), rgba(199, 36, 177, 0.3));
+            border-color: var(--secondary);
+            box-shadow: 0 5px 25px rgba(255, 107, 157, 0.6);
+        }
+
+        .mode-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 107, 157, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .mode-card:hover::before {
+            left: 100%;
+        }
+
+        .mode-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .mode-title {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.2rem;
+            color: var(--secondary);
+            margin-bottom: 15px;
+        }
+
+        .mode-description {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--text);
+            opacity: 0.9;
+        }
+
+        .mode-features {
+            margin-top: 15px;
+            text-align: left;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .mode-features li {
+            margin: 8px 0;
+            padding-left: 5px;
+        }
+
         .name-input-section {
             margin: 25px 0;
             padding: 25px;
@@ -441,6 +518,40 @@
             font-size: 1.8rem;
             color: var(--secondary);
             line-height: 1.4;
+        }
+
+        .answer-detail {
+            padding: 20px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .answer-detail.correct {
+            border-left-color: var(--correct);
+            background: rgba(78, 205, 196, 0.1);
+        }
+
+        .answer-detail.wrong {
+            border-left-color: var(--wrong);
+            background: rgba(232, 72, 85, 0.1);
+        }
+
+        .answer-detail-question {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+
+        .answer-detail-content {
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .answer-detail-content div {
+            margin: 5px 0;
         }
 
         @keyframes fadeInUp {
@@ -541,18 +652,17 @@
                     <p class="subtitle">觀察圖片，選出正確答案！</p>
                 </header>
 
-                <div class="start-info">
-                    <div class="info-item">
-                        <span class="info-icon">📝</span>
-                        <span>共 7 道題目</span>
+                <h3 style="text-align: center; margin-bottom: 20px; color: var(--secondary);">選擇遊戲模式</h3>
+                
+                <div class="mode-selection">
+                    <div class="mode-card" onclick="selectMode('normal')" id="normalMode">
+                        <div class="mode-icon">📚</div>
+                        <div class="mode-title">一般模式</div>
                     </div>
-                    <div class="info-item">
-                        <span class="info-icon">⏱️</span>
-                        <span>計時挑戰</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-icon">🎯</span>
-                        <span>測試你的觀察力</span>
+
+                    <div class="mode-card" onclick="selectMode('challenge')" id="challengeMode">
+                        <div class="mode-icon">⚔️</div>
+                        <div class="mode-title">計時模式</div>
                     </div>
                 </div>
 
@@ -561,9 +671,12 @@
                     <input type="text" id="playerNameStart" placeholder="請輸入你的名稱" maxlength="20" autofocus>
                 </div>
 
-                <button class="submit-btn" onclick="startQuiz()" id="startBtn">
+                <button class="submit-btn" onclick="startQuiz()" id="startBtn" disabled style="opacity: 0.5;">
                     🚀 開始測驗
                 </button>
+                <p style="text-align: center; margin-top: 15px; color: var(--secondary); font-size: 0.9rem;" id="modeHint">
+                    請先選擇遊戲模式
+                </p>
             </div>
         </div>
 
@@ -594,6 +707,11 @@
                     </div>
                     
                     <div class="result-item">
+                        <div class="result-label">🎮 遊戲模式</div>
+                        <div class="result-value" id="gameModeDisplay"></div>
+                    </div>
+                    
+                    <div class="result-item">
                         <div class="result-label">⏱️ 完成時間</div>
                         <div class="result-value" id="completionTime">00:00</div>
                     </div>
@@ -606,6 +724,14 @@
 
                 <div class="score-display">
                     <div id="scoreMessage"></div>
+                </div>
+
+                <!-- 挑戰模式答案詳情 -->
+                <div id="challengeDetails" class="hidden" style="margin-top: 30px;">
+                    <h3 style="text-align: center; font-family: 'Press Start 2P', cursive; font-size: 1rem; color: var(--secondary); margin-bottom: 20px;">
+                        📋 答題詳情
+                    </h3>
+                    <div id="challengeAnswersList"></div>
                 </div>
                 
                 <button class="restart-btn" onclick="backToStart()">🔄 返回首頁</button>
@@ -683,6 +809,8 @@
         let timerInterval = null;
         let elapsedTime = 0;
         let playerName = '';
+        let gameMode = null; // 'normal' 或 'challenge'
+        let challengeModeAnswers = []; // 挑戰模式儲存所有答案
 
         // 隨機打亂陣列的函數
         function shuffleArray(array) {
@@ -692,6 +820,34 @@
                 [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
             }
             return shuffled;
+        }
+
+        // 選擇遊戲模式
+        function selectMode(mode) {
+            gameMode = mode;
+            
+            // 更新視覺效果
+            document.getElementById('normalMode').classList.remove('selected');
+            document.getElementById('challengeMode').classList.remove('selected');
+            
+            if (mode === 'normal') {
+                document.getElementById('normalMode').classList.add('selected');
+            } else {
+                document.getElementById('challengeMode').classList.add('selected');
+            }
+            
+            // 啟用開始按鈕
+            const startBtn = document.getElementById('startBtn');
+            startBtn.disabled = false;
+            startBtn.style.opacity = '1';
+            
+            // 更新提示文字
+            const hint = document.getElementById('modeHint');
+            if (mode === 'normal') {
+                hint.textContent = '已選擇：一般模式 - 適合學習';
+            } else {
+                hint.textContent = '已選擇：挑戰模式 - 真正的實力測試';
+            }
         }
 
         // 格式化時間顯示
@@ -729,9 +885,19 @@
                 return;
             }
 
+            if (!gameMode) {
+                alert('請先選擇遊戲模式！');
+                return;
+            }
+
             // 隱藏開始畫面，顯示測驗畫面
             document.getElementById('startContainer').classList.add('hidden');
             document.getElementById('quizPlayContainer').classList.remove('hidden');
+            
+            // 重置挑戰模式答案記錄
+            if (gameMode === 'challenge') {
+                challengeModeAnswers = [];
+            }
             
             // 初始化測驗
             initializeQuiz();
@@ -744,6 +910,23 @@
             
             // 清空名稱輸入框
             document.getElementById('playerNameStart').value = '';
+            
+            // 重置模式選擇
+            gameMode = null;
+            challengeModeAnswers = [];
+            document.getElementById('normalMode').classList.remove('selected');
+            document.getElementById('challengeMode').classList.remove('selected');
+            
+            // 禁用開始按鈕
+            const startBtn = document.getElementById('startBtn');
+            startBtn.disabled = true;
+            startBtn.style.opacity = '0.5';
+            
+            // 重置提示文字
+            document.getElementById('modeHint').textContent = '請先選擇遊戲模式';
+            
+            // 隱藏挑戰模式詳情
+            document.getElementById('challengeDetails').classList.add('hidden');
         }
 
         // 初始化隨機題目順序
@@ -782,9 +965,15 @@
                         `).join('')}
                     </div>
                     
-                    <button class="submit-btn" id="submitBtn" onclick="submitAnswer()" disabled>
-                        提交答案
-                    </button>
+                    ${gameMode === 'normal' ? `
+                        <button class="submit-btn" id="submitBtn" onclick="submitAnswer()" disabled>
+                            提交答案
+                        </button>
+                    ` : `
+                        <div style="text-align: center; margin-top: 20px; color: var(--secondary); font-size: 1rem;">
+                            ⚡ 挑戰模式：點擊選項直接提交
+                        </div>
+                    `}
                     
                     <div id="feedback"></div>
                 </div>
@@ -800,6 +989,13 @@
             
             selectedAnswer = index;
             
+            // 挑戰模式：直接提交答案並跳到下一題
+            if (gameMode === 'challenge') {
+                submitAnswer();
+                return;
+            }
+            
+            // 一般模式：需要按提交按鈕
             // 移除所有選項的 selected 類別
             document.querySelectorAll('.option').forEach(opt => {
                 opt.classList.remove('selected');
@@ -823,23 +1019,50 @@
             // 禁用所有選項
             options.forEach(opt => opt.classList.add('disabled'));
             
-            if (selectedAnswer === question.correctAnswer) {
-                score++;
-                options[selectedAnswer].classList.add('correct');
-                feedback.innerHTML = '✓ 答對了！太棒了！';
-                feedback.className = 'feedback correct';
+            if (gameMode === 'normal') {
+                // 一般模式：顯示答案對錯
+                if (selectedAnswer === question.correctAnswer) {
+                    score++;
+                    options[selectedAnswer].classList.add('correct');
+                    feedback.innerHTML = '✓ 答對了！太棒了！';
+                    feedback.className = 'feedback correct';
+                } else {
+                    options[selectedAnswer].classList.add('wrong');
+                    options[question.correctAnswer].classList.add('correct');
+                    feedback.innerHTML = `✗ 答錯了！正確答案是：${question.options[question.correctAnswer]}`;
+                    feedback.className = 'feedback wrong';
+                }
+                
+                // 替換提交按鈕為下一題按鈕
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.outerHTML = currentQuestion < shuffledQuestions.length - 1 ?
+                    '<button class="next-btn" onclick="nextQuestion()">下一題 →</button>' :
+                    '<button class="next-btn" onclick="showResults()">查看成績 🏆</button>';
             } else {
-                options[selectedAnswer].classList.add('wrong');
-                options[question.correctAnswer].classList.add('correct');
-                feedback.innerHTML = `✗ 答錯了！正確答案是：${question.options[question.correctAnswer]}`;
-                feedback.className = 'feedback wrong';
+                // 挑戰模式：不顯示對錯，記錄答案後直接跳題
+                const isCorrect = selectedAnswer === question.correctAnswer;
+                if (isCorrect) {
+                    score++;
+                }
+                
+                // 記錄答案
+                challengeModeAnswers.push({
+                    questionIndex: currentQuestion,
+                    question: question.question,
+                    userAnswer: question.options[selectedAnswer],
+                    correctAnswer: question.options[question.correctAnswer],
+                    isCorrect: isCorrect
+                });
+                
+                // 短暫延遲後自動跳題
+                setTimeout(() => {
+                    if (currentQuestion < shuffledQuestions.length - 1) {
+                        nextQuestion();
+                    } else {
+                        showResults();
+                    }
+                }, 300);
             }
-            
-            // 替換提交按鈕為下一題按鈕
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.outerHTML = currentQuestion < shuffledQuestions.length - 1 ?
-                '<button class="next-btn" onclick="nextQuestion()">下一題 →</button>' :
-                '<button class="next-btn" onclick="showResults()">查看成績 🏆</button>';
         }
 
         function nextQuestion() {
@@ -863,6 +1086,16 @@
             // 顯示玩家名稱
             document.getElementById('currentPlayerName').textContent = playerName;
             
+            // 顯示遊戲模式
+            const modeDisplay = document.getElementById('gameModeDisplay');
+            if (gameMode === 'normal') {
+                modeDisplay.textContent = '一般模式';
+                modeDisplay.style.fontSize = '1.5rem';
+            } else {
+                modeDisplay.textContent = '挑戰模式';
+                modeDisplay.style.fontSize = '1.5rem';
+            }
+            
             // 顯示完成時間
             document.getElementById('completionTime').textContent = formatTime(elapsedTime);
             
@@ -883,6 +1116,26 @@
             }
             
             document.getElementById('scoreMessage').textContent = message;
+            
+            // 挑戰模式：顯示答案詳情
+            if (gameMode === 'challenge') {
+                const detailsContainer = document.getElementById('challengeDetails');
+                const answersList = document.getElementById('challengeAnswersList');
+                
+                detailsContainer.classList.remove('hidden');
+                
+                answersList.innerHTML = challengeModeAnswers.map((answer, index) => `
+                    <div class="answer-detail ${answer.isCorrect ? 'correct' : 'wrong'}">
+                        <div class="answer-detail-question">
+                            題目 ${index + 1}: ${answer.question}
+                        </div>
+                        <div class="answer-detail-content">
+                            <div><strong>你的答案：</strong>${answer.userAnswer} ${answer.isCorrect ? '✓' : '✗'}</div>
+                            ${!answer.isCorrect ? `<div><strong>正確答案：</strong>${answer.correctAnswer}</div>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+            }
             
             // 更新進度條到 100%
             const progressBar = document.getElementById('progressBar');
