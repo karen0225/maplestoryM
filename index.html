@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>混沌威爾2階辨識測驗</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF6B9D;
+            --secondary: #FEC163;
+            --correct: #4ECDC4;
+            --wrong: #E84855;
+            --bg-dark: #1A1A2E;
+            --bg-card: #16213E;
+            --text: #EAEAEA;
+            --accent: #C724B1;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(255, 107, 157, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(254, 193, 99, 0.1) 0%, transparent 50%),
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(255, 255, 255, 0.03) 2px,
+                    rgba(255, 255, 255, 0.03) 4px
+                );
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        h1 {
+            font-family: 'Press Start 2P', cursive;
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            text-shadow: 0 0 30px rgba(255, 107, 157, 0.5);
+            line-height: 1.4;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--secondary);
+            opacity: 0.9;
+        }
+
+        .progress-bar {
+            background: var(--bg-card);
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 20px rgba(255, 107, 157, 0.3);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.7rem;
+            color: white;
+        }
+
+        .quiz-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            border: 3px solid var(--primary);
+            box-shadow: 
+                0 10px 40px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 107, 157, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            animation: fadeInUp 0.6s ease-out backwards;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quiz-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 107, 157, 0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        .question-number {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.9rem;
+            color: var(--secondary);
+            margin-bottom: 20px;
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(254, 193, 99, 0.1);
+            border-radius: 10px;
+            border: 2px solid var(--secondary);
+        }
+
+        .gif-container {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            border: 2px dashed var(--accent);
+        }
+
+        .gif-container img {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 10px;
+            box-shadow: 0 8px 30px rgba(199, 36, 177, 0.4);
+            transition: transform 0.3s ease;
+        }
+
+        .gif-container img:hover {
+            transform: scale(1.05) rotate(1deg);
+        }
+
+        .gif-placeholder {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, rgba(255, 107, 157, 0.2), rgba(199, 36, 177, 0.2));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.8rem;
+            color: var(--text);
+            opacity: 0.6;
+            text-align: center;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .question-text {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 25px;
+            color: var(--text);
+        }
+
+        .options {
+            display: grid;
+            gap: 15px;
+        }
+
+        .option {
+            padding: 18px 25px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 3px solid rgba(255, 107, 157, 0.3);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 1.1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 107, 157, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+        }
+
+        .option:hover {
+            background: rgba(255, 107, 157, 0.15);
+            border-color: var(--primary);
+            transform: translateX(10px);
+        }
+
+        .option:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .option.selected {
+            background: linear-gradient(135deg, rgba(255, 107, 157, 0.3), rgba(199, 36, 177, 0.3));
+            border-color: var(--primary);
+            box-shadow: 0 5px 20px rgba(255, 107, 157, 0.4);
+        }
+
+        .option.correct {
+            background: linear-gradient(135deg, rgba(78, 205, 196, 0.3), rgba(78, 205, 196, 0.2));
+            border-color: var(--correct);
+            animation: pulse 0.5s;
+        }
+
+        .option.wrong {
+            background: linear-gradient(135deg, rgba(232, 72, 85, 0.3), rgba(232, 72, 85, 0.2));
+            border-color: var(--wrong);
+            animation: shake 0.5s;
+        }
+
+        .option.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .submit-btn, .next-btn, .restart-btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 1.2rem;
+            font-family: 'Press Start 2P', cursive;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-top: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(255, 107, 157, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn::after, .next-btn::after, .restart-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .submit-btn:hover::after, .next-btn:hover::after, .restart-btn:hover::after {
+            width: 400px;
+            height: 400px;
+        }
+
+        .submit-btn:hover, .next-btn:hover, .restart-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(255, 107, 157, 0.6);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .feedback {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-align: center;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .feedback.correct {
+            background: linear-gradient(135deg, rgba(78, 205, 196, 0.2), rgba(78, 205, 196, 0.1));
+            border: 2px solid var(--correct);
+            color: var(--correct);
+        }
+
+        .feedback.wrong {
+            background: linear-gradient(135deg, rgba(232, 72, 85, 0.2), rgba(232, 72, 85, 0.1));
+            border: 2px solid var(--wrong);
+            color: var(--wrong);
+        }
+
+        .score-display {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-top: 20px;
+            padding: 25px;
+            background: rgba(255, 107, 157, 0.1);
+            border-radius: 15px;
+            border: 2px solid var(--primary);
+        }
+
+        .score-number {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 3rem;
+            background: linear-gradient(135deg, var(--correct), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 15px 0;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.02);
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% {
+                transform: translateX(0);
+            }
+            25% {
+                transform: translateX(-10px);
+            }
+            75% {
+                transform: translateX(10px);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                left: -100%;
+            }
+            100% {
+                left: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .quiz-card {
+                padding: 25px;
+            }
+
+            .question-text {
+                font-size: 1.1rem;
+            }
+
+            .option {
+                padding: 15px 20px;
+                font-size: 1rem;
+            }
+
+            .submit-btn, .next-btn, .restart-btn {
+                font-size: 0.9rem;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 威爾二階辨識挑戰 🎮</h1>
+            <p class="subtitle">觀察圖片，選出正確答案！</p>
+        </header>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar">0/7</div>
+        </div>
+
+        <div id="quizContainer"></div>
+
+        <div id="resultContainer" class="hidden">
+            <div class="quiz-card">
+                <h2 style="text-align: center; font-family: 'Press Start 2P', cursive; margin-bottom: 20px;">🎊 測驗完成！🎊</h2>
+                <div class="score-display">
+                    <div>你的得分</div>
+                    <div class="score-number" id="finalScore">0</div>
+                    <div id="scoreMessage"></div>
+                </div>
+                <button class="restart-btn" onclick="restartQuiz()">🔄 重新開始</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 測驗題目資料
+        const quizData = [
+            {
+                id: 1,
+                gifUrl: 'img/1.png', // 請替換為實際的 GIF URL
+                gifPlaceholder: '整齊(舊)',
+                question: '走法？',
+                options: ['中->左1->中', '中->右1->右2->中', '中->左2->左2->中', '中->右2->右1->中'],
+                correctAnswer: 0 // 索引值，0 代表第一個選項 '貓'
+            },
+            {
+                id: 2,
+                gifUrl: 'img/2.png',
+                gifPlaceholder: '交錯(舊)',
+                question: '走法？',
+                options: ['中->右2->中', '中->右1->右2->中', '中->右2->右1->中', '中->左2->左2->中'],
+                correctAnswer: 1
+            },
+            {
+                id: 3,
+                gifUrl: 'img/3.png',
+                gifPlaceholder: '下2根',
+                question: '走法？',
+                options: ['中->右1->右2->中', '中->右2->中', '中->左2->左2->中', '中->右2->右1->中'],
+                correctAnswer: 2
+            },
+            {
+                id: 4,
+                gifUrl: 'img/4.png',
+                gifPlaceholder: '左邊上下交錯',
+                question: '走法？',
+                options: ['中->右2->中', '中->左2->左2->中', '中->右2->右1->中', '中->左2->左3->中'],
+                correctAnswer: 2
+            },
+            {
+                id: 5,
+                gifUrl: 'img/5.png',
+                gifPlaceholder: '(裂地) 下緊密兩根',
+                question: '走法？',
+                options: ['中->右1->右2->中', '中->左1->中', '中->右2->右1->中', '中->右2->中'],
+                correctAnswer: 3
+            },
+            {
+                id: 6,
+                gifUrl: 'img/6.png',
+                gifPlaceholder: '(裂地)下分散兩根',
+                question: '走法？',
+                options: ['中->左2->左3->中', '中->右2->右1->中', '中->右2->中', '中->左1->中'],
+                correctAnswer: 0
+            },
+            {
+                id: 7,
+                gifUrl: 'img/7.png',
+                gifPlaceholder: '(裂地) 下一根',
+                question: '走法？',
+                options: ['中->左1->中', '中->右2->中', '中->右2->右1->中', '中->右1->右2->中'],
+                correctAnswer: 1
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedAnswer = null;
+        let answered = false;
+        let shuffledQuestions = [];
+
+        // 隨機打亂陣列的函數
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // 初始化隨機題目順序
+        function initializeQuiz() {
+            shuffledQuestions = shuffleArray(quizData);
+            currentQuestion = 0;
+            score = 0;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const container = document.getElementById('quizContainer');
+            const question = shuffledQuestions[currentQuestion];
+            
+            container.innerHTML = `
+                <div class="quiz-card" style="animation-delay: 0.1s">
+                    <div class="question-number">題目 ${currentQuestion + 1}/7</div>
+                    
+                    <div class="gif-container">
+                        ${question.gifUrl ? 
+                            `<img src="${question.gifUrl}" alt="Question ${question.id} GIF">` :
+                            `<div class="gif-placeholder">${question.gifPlaceholder}</div>`
+                        }
+                    </div>
+                    
+                    <div class="question-text">${question.question}</div>
+                    
+                    <div class="options">
+                        ${question.options.map((option, index) => `
+                            <div class="option" onclick="selectAnswer(${index})" data-index="${index}">
+                                ${String.fromCharCode(65 + index)}. ${option}
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <button class="submit-btn" id="submitBtn" onclick="submitAnswer()" disabled>
+                        提交答案
+                    </button>
+                    
+                    <div id="feedback"></div>
+                </div>
+            `;
+
+            selectedAnswer = null;
+            answered = false;
+            updateProgress();
+        }
+
+        function selectAnswer(index) {
+            if (answered) return;
+            
+            selectedAnswer = index;
+            
+            // 移除所有選項的 selected 類別
+            document.querySelectorAll('.option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // 添加 selected 類別到被選中的選項
+            document.querySelector(`.option[data-index="${index}"]`).classList.add('selected');
+            
+            // 啟用提交按鈕
+            document.getElementById('submitBtn').disabled = false;
+        }
+
+        function submitAnswer() {
+            if (selectedAnswer === null || answered) return;
+            
+            answered = true;
+            const question = shuffledQuestions[currentQuestion];
+            const options = document.querySelectorAll('.option');
+            const feedback = document.getElementById('feedback');
+            
+            // 禁用所有選項
+            options.forEach(opt => opt.classList.add('disabled'));
+            
+            if (selectedAnswer === question.correctAnswer) {
+                score++;
+                options[selectedAnswer].classList.add('correct');
+                feedback.innerHTML = '✓ 答對了！太棒了！';
+                feedback.className = 'feedback correct';
+            } else {
+                options[selectedAnswer].classList.add('wrong');
+                options[question.correctAnswer].classList.add('correct');
+                feedback.innerHTML = `✗ 答錯了！正確答案是：${question.options[question.correctAnswer]}`;
+                feedback.className = 'feedback wrong';
+            }
+            
+            // 替換提交按鈕為下一題按鈕
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.outerHTML = currentQuestion < shuffledQuestions.length - 1 ?
+                '<button class="next-btn" onclick="nextQuestion()">下一題 →</button>' :
+                '<button class="next-btn" onclick="showResults()">查看成績 🏆</button>';
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            loadQuestion();
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion) / shuffledQuestions.length) * 100;
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = progress + '%';
+            progressBar.textContent = `${currentQuestion}/${shuffledQuestions.length}`;
+        }
+
+        function showResults() {
+            document.getElementById('quizContainer').classList.add('hidden');
+            document.getElementById('resultContainer').classList.remove('hidden');
+            document.getElementById('finalScore').textContent = score + ' / ' + shuffledQuestions.length;
+            
+            const percentage = (score / shuffledQuestions.length) * 100;
+            let message = '';
+            
+            if (percentage === 100) {
+                message = '你是威爾2階大師！';
+            } else if (percentage >= 80) {
+                message = '還行～記得開能量補血！';
+            } else if (percentage >= 60) {
+                message = '給我重測！';
+            } else {
+                message = '？　在雷？';
+            }
+            
+            document.getElementById('scoreMessage').textContent = message;
+            
+            // 更新進度條到 100%
+            const progressBar = document.getElementById('progressBar');
+            progressBar.style.width = '100%';
+            progressBar.textContent = shuffledQuestions.length + '/' + shuffledQuestions.length;
+        }
+
+        function restartQuiz() {
+            document.getElementById('resultContainer').classList.add('hidden');
+            document.getElementById('quizContainer').classList.remove('hidden');
+            initializeQuiz();
+        }
+
+        // 初始化測驗
+        initializeQuiz();
+    </script>
+</body>
+</html>
