@@ -159,10 +159,34 @@
             border-radius: 10px;
             box-shadow: 0 8px 30px rgba(199, 36, 177, 0.4);
             transition: transform 0.3s ease;
+            display: block;
+            margin: 0 auto;
         }
 
         .gif-container img:hover {
             transform: scale(1.05) rotate(1deg);
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 107, 157, 0.3);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 50px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .preload-status {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.1rem;
+            color: var(--secondary);
         }
 
         .gif-placeholder {
@@ -559,6 +583,11 @@
                     <input type="text" id="playerNameStart" placeholder="請輸入你的名稱" maxlength="20" autofocus>
                 </div>
 
+                <div id="preloadStatus" class="preload-status hidden">
+                    <div class="loading-spinner"></div>
+                    <div>正在載入圖片... <span id="preloadProgress">0/7</span></div>
+                </div>
+
                 <button class="submit-btn" onclick="startQuiz()" id="startBtn">
                     🚀 開始測驗
                 </button>
@@ -681,6 +710,43 @@
         let timerInterval = null;
         let elapsedTime = 0;
         let playerName = '';
+        let imagesPreloaded = false;
+        let preloadedImages = {};
+
+        // 預載所有圖片
+        function preloadImages() {
+            return new Promise((resolve) => {
+                const imagePromises = [];
+                let loadedCount = 0;
+                const totalImages = quizData.length;
+
+                const updateProgress = () => {
+                    loadedCount++;
+                    document.getElementById('preloadProgress').textContent = `${loadedCount}/${totalImages}`;
+                    if (loadedCount === totalImages) {
+                        imagesPreloaded = true;
+                        resolve();
+                    }
+                };
+
+                quizData.forEach(question => {
+                    if (question.gifUrl) {
+                        const img = new Image();
+                        preloadedImages[question.id] = img;
+                        
+                        img.onload = updateProgress;
+                        img.onerror = () => {
+                            console.warn(`圖片載入失敗: ${question.gifUrl}`);
+                            updateProgress();
+                        };
+                        
+                        img.src = question.gifUrl;
+                    } else {
+                        updateProgress();
+                    }
+                });
+            });
+        }
 
         // 隨機打亂陣列的函數
         function shuffleArray(array) {
@@ -717,7 +783,7 @@
         }
 
         // 開始測驗
-        function startQuiz() {
+        async function startQuiz() {
             const nameInput = document.getElementById('playerNameStart');
             playerName = nameInput.value.trim();
             
@@ -725,6 +791,25 @@
                 alert('請輸入你的名稱！');
                 nameInput.focus();
                 return;
+            }
+
+            // 如果圖片尚未預載，先預載圖片
+            if (!imagesPreloaded) {
+                const startBtn = document.getElementById('startBtn');
+                const preloadStatus = document.getElementById('preloadStatus');
+                
+                // 顯示載入狀態
+                startBtn.disabled = true;
+                startBtn.textContent = '載入中...';
+                preloadStatus.classList.remove('hidden');
+                
+                // 預載圖片
+                await preloadImages();
+                
+                // 隱藏載入狀態
+                preloadStatus.classList.add('hidden');
+                startBtn.disabled = false;
+                startBtn.textContent = '🚀 開始測驗';
             }
 
             // 隱藏開始畫面，顯示測驗畫面
@@ -901,6 +986,11 @@
                 if (e.key === 'Enter') {
                     startQuiz();
                 }
+            });
+
+            // 在背景開始預載圖片（不阻塞使用者輸入）
+            preloadImages().then(() => {
+                console.log('所有圖片已預載完成');
             });
         });
     </script>
