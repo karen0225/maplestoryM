@@ -70,6 +70,20 @@
             opacity: 0.9;
         }
 
+        .timer-display {
+            margin-top: 15px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.5rem;
+            color: var(--secondary);
+            text-align: center;
+            padding: 15px;
+            background: rgba(254, 193, 99, 0.1);
+            border-radius: 12px;
+            border: 2px solid var(--secondary);
+            display: inline-block;
+            min-width: 200px;
+        }
+
         .progress-bar {
             background: var(--bg-card);
             height: 30px;
@@ -331,6 +345,102 @@
             display: none;
         }
 
+        .start-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+
+        .info-item {
+            padding: 20px;
+            background: rgba(255, 107, 157, 0.1);
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .info-item:hover {
+            background: rgba(255, 107, 157, 0.2);
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(255, 107, 157, 0.3);
+        }
+
+        .info-icon {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .name-input-section {
+            margin: 25px 0;
+            padding: 25px;
+            background: rgba(255, 107, 157, 0.1);
+            border-radius: 15px;
+            border: 2px solid var(--primary);
+        }
+
+        .name-input-section label {
+            display: block;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+
+        .name-input-section input {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+
+        .name-input-section input:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 20px rgba(254, 193, 99, 0.3);
+        }
+
+        .result-summary {
+            display: grid;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .result-item {
+            padding: 25px;
+            background: rgba(255, 107, 157, 0.1);
+            border: 3px solid var(--primary);
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .result-item:hover {
+            background: rgba(255, 107, 157, 0.2);
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(255, 107, 157, 0.3);
+        }
+
+        .result-label {
+            font-size: 1rem;
+            color: var(--text);
+            opacity: 0.8;
+            margin-bottom: 12px;
+        }
+
+        .result-value {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.8rem;
+            color: var(--secondary);
+            line-height: 1.4;
+        }
+
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -412,31 +522,91 @@
                 font-size: 0.9rem;
                 padding: 15px;
             }
+
+            .result-value {
+                font-size: 1.3rem;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>🎮 威爾二階辨識挑戰 🎮</h1>
-            <p class="subtitle">觀察圖片，選出正確答案！</p>
-        </header>
+        <!-- 開始畫面 -->
+        <div id="startContainer">
+            <div class="quiz-card">
+                <header style="margin-bottom: 30px;">
+                    <h1>🎮 威爾二階辨識挑戰 🎮</h1>
+                    <p class="subtitle">觀察圖片，選出正確答案！</p>
+                </header>
 
-        <div class="progress-bar">
-            <div class="progress-fill" id="progressBar">0/7</div>
+                <div class="start-info">
+                    <div class="info-item">
+                        <span class="info-icon">📝</span>
+                        <span>共 7 道題目</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">⏱️</span>
+                        <span>計時挑戰</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">🎯</span>
+                        <span>測試你的觀察力</span>
+                    </div>
+                </div>
+
+                <div class="name-input-section">
+                    <label for="playerNameStart">請輸入你的名稱：</label>
+                    <input type="text" id="playerNameStart" placeholder="請輸入你的名稱" maxlength="20" autofocus>
+                </div>
+
+                <button class="submit-btn" onclick="startQuiz()" id="startBtn">
+                    🚀 開始測驗
+                </button>
+            </div>
         </div>
 
-        <div id="quizContainer"></div>
+        <!-- 測驗進行中 -->
+        <div id="quizPlayContainer" class="hidden">
+            <header>
+                <h1>🎮 威爾二階辨識挑戰 🎮</h1>
+                <p class="subtitle">觀察圖片，選出正確答案！</p>
+                <div class="timer-display" id="timerDisplay">⏱️ 00:00</div>
+            </header>
 
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar">0/7</div>
+            </div>
+
+            <div id="quizContainer"></div>
+        </div>
+
+        <!-- 結果頁面 -->
         <div id="resultContainer" class="hidden">
             <div class="quiz-card">
-                <h2 style="text-align: center; font-family: 'Press Start 2P', cursive; margin-bottom: 20px;">🎊 測驗完成！🎊</h2>
+                <h2 style="text-align: center; font-family: 'Press Start 2P', cursive; margin-bottom: 30px;">🎊 測驗完成！🎊</h2>
+                
+                <div class="result-summary">
+                    <div class="result-item">
+                        <div class="result-label">👤 玩家姓名</div>
+                        <div class="result-value" id="currentPlayerName"></div>
+                    </div>
+                    
+                    <div class="result-item">
+                        <div class="result-label">⏱️ 完成時間</div>
+                        <div class="result-value" id="completionTime">00:00</div>
+                    </div>
+                    
+                    <div class="result-item">
+                        <div class="result-label">🎯 測驗得分</div>
+                        <div class="result-value" id="finalScore">0 / 7</div>
+                    </div>
+                </div>
+
                 <div class="score-display">
-                    <div>你的得分</div>
-                    <div class="score-number" id="finalScore">0</div>
                     <div id="scoreMessage"></div>
                 </div>
-                <button class="restart-btn" onclick="restartQuiz()">🔄 重新開始</button>
+                
+                <button class="restart-btn" onclick="backToStart()">🔄 返回首頁</button>
             </div>
         </div>
     </div>
@@ -446,11 +616,11 @@
         const quizData = [
             {
                 id: 1,
-                gifUrl: './img/1.png', // 請替換為實際的 GIF URL
+                gifUrl: './img/1.png',
                 gifPlaceholder: '整齊(舊)',
                 question: '走法？',
                 options: ['中->左1->中', '中->右1->右2->中', '中->左2->左2->中', '中->右2->右1->中'],
-                correctAnswer: 0 // 索引值，0 代表第一個選項 '貓'
+                correctAnswer: 0
             },
             {
                 id: 2,
@@ -507,6 +677,10 @@
         let selectedAnswer = null;
         let answered = false;
         let shuffledQuestions = [];
+        let startTime = null;
+        let timerInterval = null;
+        let elapsedTime = 0;
+        let playerName = '';
 
         // 隨機打亂陣列的函數
         function shuffleArray(array) {
@@ -518,11 +692,66 @@
             return shuffled;
         }
 
+        // 格式化時間顯示
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        // 開始計時器
+        function startTimer() {
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+                document.getElementById('timerDisplay').textContent = `⏱️ ${formatTime(elapsedTime)}`;
+            }, 1000);
+        }
+
+        // 停止計時器
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        // 開始測驗
+        function startQuiz() {
+            const nameInput = document.getElementById('playerNameStart');
+            playerName = nameInput.value.trim();
+            
+            if (!playerName) {
+                alert('請輸入你的名稱！');
+                nameInput.focus();
+                return;
+            }
+
+            // 隱藏開始畫面，顯示測驗畫面
+            document.getElementById('startContainer').classList.add('hidden');
+            document.getElementById('quizPlayContainer').classList.remove('hidden');
+            
+            // 初始化測驗
+            initializeQuiz();
+        }
+
+        // 返回開始畫面
+        function backToStart() {
+            document.getElementById('resultContainer').classList.add('hidden');
+            document.getElementById('startContainer').classList.remove('hidden');
+            
+            // 清空名稱輸入框
+            document.getElementById('playerNameStart').value = '';
+        }
+
         // 初始化隨機題目順序
         function initializeQuiz() {
             shuffledQuestions = shuffleArray(quizData);
             currentQuestion = 0;
             score = 0;
+            elapsedTime = 0;
+            stopTimer();
+            startTimer();
             loadQuestion();
         }
 
@@ -624,8 +853,18 @@
         }
 
         function showResults() {
-            document.getElementById('quizContainer').classList.add('hidden');
+            stopTimer();
+            
+            document.getElementById('quizPlayContainer').classList.add('hidden');
             document.getElementById('resultContainer').classList.remove('hidden');
+            
+            // 顯示玩家名稱
+            document.getElementById('currentPlayerName').textContent = playerName;
+            
+            // 顯示完成時間
+            document.getElementById('completionTime').textContent = formatTime(elapsedTime);
+            
+            // 顯示得分
             document.getElementById('finalScore').textContent = score + ' / ' + shuffledQuestions.length;
             
             const percentage = (score / shuffledQuestions.length) * 100;
@@ -655,8 +894,15 @@
             initializeQuiz();
         }
 
-        // 初始化測驗
-        initializeQuiz();
+        // 初始化頁面
+        document.addEventListener('DOMContentLoaded', function() {
+            // 添加 Enter 鍵支援
+            document.getElementById('playerNameStart').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    startQuiz();
+                }
+            });
+        });
     </script>
 </body>
 </html>
